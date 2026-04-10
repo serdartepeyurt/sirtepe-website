@@ -1,0 +1,42 @@
+.main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 6rem 2rem 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.newBtn {
+  padding: 0.75rem 1.5rem;
+  background: var(--accent);
+  color: var(--bg-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.newBtn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.empty {
+  text-align: center;
+  padding: 4rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+}

@@ -1,0 +1,26 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sirtepe-website
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
+      - GISCUS_REPO=${GISCUS_REPO}
+      - GISCUS_REPO_ID=${GISCUS_REPO_ID}
+      - GISCUS_CATEGORY=${GISCUS_CATEGORY}
+      - GISCUS_CATEGORY_ID=${GISCUS_CATEGORY_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+    volumes:
+      - sirtepe-data:/app
+      - /app/node_modules
+      - /app/.next
+
+volumes:
+  sirtepe-data:
