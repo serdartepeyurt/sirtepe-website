@@ -22,14 +22,11 @@ pipeline {
 
         stage('Health Check') {
             steps {
-                waitUntil {
-                    script {
-                        def response = httpRequest(
-                            url: 'http://localhost:5000',
-                            validResponseCodes: '200'
-                        )
-                        return response.status == 200
-                    }
+                script {
+                    sh """
+                        sleep 5
+                        curl -f http://localhost:5000 || exit 1
+                    """
                 }
             }
         }
