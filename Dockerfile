@@ -28,6 +28,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+
 USER nextjs
 
 EXPOSE 5000
@@ -35,4 +38,4 @@ EXPOSE 5000
 ENV PORT=5000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "test -f /app/data/dev.db || (mkdir -p /app/data && DATABASE_URL='file:./data/dev.db' npx prisma migrate deploy); node server.js"]

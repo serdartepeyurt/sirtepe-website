@@ -15,12 +15,6 @@ pipeline {
                         docker compose down || true
                         docker compose build --no-cache
                         docker compose up -d
-
-                        # First run setup
-                        if ! docker compose exec -T web test -f /app/data/dev.db; then
-                            echo "First run - running migrations"
-                            docker compose exec -T -e DATABASE_URL="file:./data/dev.db" web sh -c 'npx prisma migrate deploy'
-                        fi
                     """
                 }
             }
