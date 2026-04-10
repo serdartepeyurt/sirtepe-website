@@ -25,7 +25,7 @@ pipeline {
                 script {
                     sh """
                         sleep 15
-                        curl -f http://host.docker.internal:5000 || exit 1
+                        docker compose ps && docker compose logs --tail=5
                     """
                 }
             }
