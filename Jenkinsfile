@@ -12,9 +12,9 @@ pipeline {
             steps {
                 script {
                     sh """
-                        docker-compose down || true
-                        docker-compose build --no-cache
-                        docker-compose up -d
+                        docker compose down || true
+                        docker compose build --no-cache
+                        docker compose up -d
                     """
                 }
             }
