@@ -24,7 +24,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                        sleep 5
+                        sleep 15
                         curl -f http://localhost:5000 || exit 1
                     """
                 }
