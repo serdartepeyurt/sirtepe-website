@@ -15,6 +15,12 @@ pipeline {
                         docker compose down || true
                         docker compose build --no-cache
                         docker compose up -d
+
+                        # First run setup
+                        if ! docker compose exec -T web test -f /app/data/dev.db; then
+                            echo "First run - running migrations"
+                            docker compose exec -T web npx prisma migrate deploy
+                        fi
                     """
                 }
             }
