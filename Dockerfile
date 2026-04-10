@@ -40,4 +40,4 @@ EXPOSE 5000
 ENV PORT=5000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "test -f /app/data/dev.db || (mkdir -p /app/data && DATABASE_URL='file:./data/dev.db' npx prisma migrate deploy); node server.js"]
+CMD ["sh", "-c", "DATABASE_URL='file:./data/dev.db' npx prisma migrate deploy; node server.js"]
