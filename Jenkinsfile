@@ -19,7 +19,7 @@ pipeline {
                         # First run setup
                         if ! docker compose exec -T web test -f /app/data/dev.db; then
                             echo "First run - running migrations"
-                            docker compose exec -T web bash -c 'DATABASE_URL="file:./data/dev.db" npx prisma migrate deploy'
+                            docker compose exec -T web sh -c 'DATABASE_URL="file:./data/dev.db" npx prisma migrate deploy'
                         fi
                     """
                 }
