@@ -40,4 +40,4 @@ EXPOSE 5000
 ENV PORT=5000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "mkdir -p /app/data && touch /app/data/dev.db && DATABASE_URL='file:./data/dev.db' npx prisma db push --accept-data-loss && node server.js"]
+CMD ["sh", "-c", "mkdir -p /app/data && touch /app/data/dev.db && export DATABASE_URL='file:./data/dev.db' && npx prisma db push --accept-data-loss && node server.js"]
