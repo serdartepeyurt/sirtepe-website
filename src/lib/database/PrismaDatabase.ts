@@ -2,7 +2,7 @@ import { PrismaClient } from '@/generated/prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { IDatabase } from '@/interfaces/IDatabase';
 
-const adapter = new PrismaBetterSqlite3({ url: 'dev.db' });
+const adapter = new PrismaBetterSqlite3({ url: './data/dev.db' });
 
 export class PrismaDatabase implements IDatabase {
   private client: PrismaClient;
