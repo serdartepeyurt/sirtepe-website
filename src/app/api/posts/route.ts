@@ -33,6 +33,31 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(post, { status: 201 });
 }
 
+export async function PATCH(request: NextRequest) {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await request.json();
+  const { id, title, slug, content, excerpt, published } = body;
+
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  const updateData: Partial<typeof body> = {};
+  if (title !== undefined) updateData.title = title;
+  if (slug !== undefined) updateData.slug = slug;
+  if (content !== undefined) updateData.content = content;
+  if (excerpt !== undefined) updateData.excerpt = excerpt;
+  if (published !== undefined) updateData.published = published;
+
+  const post = await repository.updatePost(id, updateData);
+  return NextResponse.json(post);
+}
+
 export async function DELETE(request: NextRequest) {
   const cookieStore = await cookies();
   const session = cookieStore.get("session");

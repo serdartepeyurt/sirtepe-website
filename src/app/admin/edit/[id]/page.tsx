@@ -1,40 +1,68 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MdxEditor from "@/components/ui/MdxEditor";
 import styles from "./admin.module.css";
+import type { BlogPost } from "@/interfaces/IContentRepository";
 
-export default function NewPost() {
+export default function EditPost({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [form, setForm] = useState({ title: "", slug: "", excerpt: "" });
-  const [content, setContent] = useState("");
-  const [published, setPublished] = useState(false);
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", content: "" });
+  const [published, setPublished] = useState(false);
+
+  const loadPost = useCallback(async () => {
+    const res = await fetch("/api/posts");
+    if (!res.ok) { router.push("/admin"); return; }
+    const posts: BlogPost[] = await res.json();
+    const found = posts.find((p) => p.id === params.id);
+    if (!found) { router.push("/admin"); return; }
+    setPost(found);
+    setForm({ title: found.title, slug: found.slug, excerpt: found.excerpt || "", content: found.content });
+    setPublished(found.published);
+    setLoading(false);
+  }, [params.id, router]);
+
+  useEffect(() => { loadPost(); }, [loadPost]);
 
   const handleTitleChange = (value: string) => {
-    setForm({
+    setForm((f) => ({
+      ...f,
       title: value,
       slug: value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
-      excerpt: form.excerpt,
-    });
+    }));
   };
 
   const handleSave = async () => {
-    if (!form.title || !form.slug || !content) return;
+    if (!form.title || !form.slug || !form.content || !post) return;
     setSaving(true);
     try {
       const res = await fetch("/api/posts", {
-        method: "POST",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, content, published }),
+        body: JSON.stringify({ id: post.id, ...form, published }),
       });
-      if (res.ok) router.push("/admin");
+      if (res.ok) {
+        const updated = await res.json();
+        setPost(updated);
+        router.push("/admin");
+      }
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className={styles.main}>
+        <div className={styles.loadingRow}>Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.main}>
@@ -46,7 +74,7 @@ export default function NewPost() {
       </Link>
 
       <div className={styles.formHeader}>
-        <h1 className={styles.formTitle}>New Post</h1>
+        <h1 className={styles.formTitle}>Edit Post</h1>
         <div className={styles.formActions}>
           <button
             type="button"
@@ -69,13 +97,8 @@ export default function NewPost() {
               </>
             )}
           </button>
-          <button
-            type="button"
-            className={styles.saveBtn}
-            onClick={handleSave}
-            disabled={saving || !form.title || !content}
-          >
-            {saving ? "Saving..." : "Publish"}
+          <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={saving || !form.title || !form.content}>
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
@@ -84,37 +107,21 @@ export default function NewPost() {
         <div className={styles.formRow}>
           <div className={styles.formField}>
             <label className={styles.formLabel}>Title</label>
-            <input
-              className={styles.formInput}
-              type="text"
-              placeholder="Post title"
-              value={form.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-            />
+            <input className={styles.formInput} type="text" value={form.title} onChange={(e) => handleTitleChange(e.target.value)} />
           </div>
           <div className={styles.formField}>
             <label className={styles.formLabel}>Slug</label>
-            <input
-              className={`${styles.formInput} ${styles.readonly}`}
-              type="text"
-              value={form.slug}
-              readOnly
-            />
+            <input className={`${styles.formInput} ${styles.readonly}`} type="text" value={form.slug} readOnly />
           </div>
         </div>
         <div className={styles.formField}>
           <label className={styles.formLabel}>Excerpt</label>
-          <textarea
-            className={styles.formTextarea}
-            value={form.excerpt}
-            onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
-            placeholder="Short description shown in post listings..."
-          />
+          <textarea className={styles.formTextarea} value={form.excerpt} onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))} placeholder="Short description shown in post listings..." />
         </div>
         <div className={styles.editorField}>
           <label className={styles.formLabel}>Content (MDX)</label>
           <div className={styles.editor}>
-            <MdxEditor onChange={(v) => setContent(v || "")} />
+            <MdxEditor onChange={(v) => setForm((f) => ({ ...f, content: v || "" }))} />
           </div>
         </div>
       </div>
