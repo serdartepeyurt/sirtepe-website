@@ -32,6 +32,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder /app/scripts ./scripts
 
 RUN npm install --omit=dev && \
     npx prisma generate && \
@@ -45,4 +46,4 @@ EXPOSE 5000
 ENV PORT=5000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "mkdir -p /app/data && touch /app/data/dev.db && node -e \"const{sqlite}=require('better-sqlite3');const db=sqlite('/app/data/dev.db');db.exec('CREATE TABLE IF NOT EXISTS Post(id TEXT PRIMARY KEY,slug TEXT UNIQUE,title TEXT,content TEXT,excerpt TEXT,published INTEGER DEFAULT 0,createdAt TEXT,updatedAt TEXT)');console.log('Schema created');\" && node server.js"]
+CMD ["sh", "-c", "mkdir -p /app/data && node /app/scripts/init-db.js && node server.js"]
