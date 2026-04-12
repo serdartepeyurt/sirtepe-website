@@ -55,5 +55,6 @@ export async function GET(request: NextRequest) {
     maxAge: 60 * 60 * 24 * 7, // 1 week
   });
 
-  return NextResponse.redirect(new URL("/admin", request.url));
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || new URL(process.env.GOOGLE_REDIRECT_URI || "https://serdartepeyurt.com").origin;
+  return NextResponse.redirect(new URL("/admin", siteUrl));
 }
