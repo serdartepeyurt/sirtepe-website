@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MdxEditor from "@/components/ui/MdxEditor";
-import styles from "./admin.module.css";
+import styles from "@/app/admin/admin.module.css";
 import type { BlogPost } from "@/interfaces/IContentRepository";
 
 export default function EditPost({ params }: { params: { id: string } }) {
