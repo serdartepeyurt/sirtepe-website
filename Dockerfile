@@ -8,6 +8,9 @@ RUN npm ci
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -17,6 +20,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+ARG DATABASE_URL=file:./data/dev.db
+ENV DATABASE_URL=$DATABASE_URL
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
