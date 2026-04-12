@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MdxEditor from "@/components/ui/MdxEditor";
-import styles from "./admin.module.css";
+import styles from "@/app/admin/admin.module.css";
 
 export default function NewPost() {
   const router = useRouter();

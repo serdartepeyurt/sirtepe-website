@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import styles from "./admin.module.css";
+import styles from "@/app/admin/admin.module.css";
 import type { BlogPost } from "@/interfaces/IContentRepository";
 
 type Filter = "all" | "published" | "draft";
