@@ -47,8 +47,9 @@ export default function NewPost() {
             type="button"
             onClick={() => setPublished(!published)}
             className={`${styles.publishBtn} ${published ? styles.published : ""}`}
+            title={published ? "Currently published — click to save as draft instead" : "Currently draft — click to publish instead"}
           >
-            {published ? "Published" : "Draft"}
+            {published ? "Published \u2713" : "Save as Draft"}
           </button>
           <button
             type="button"

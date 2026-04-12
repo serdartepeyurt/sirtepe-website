@@ -32,3 +32,19 @@ export async function POST(request: NextRequest) {
   const post = await repository.createPost({ title, slug, content, excerpt, published });
   return NextResponse.json(post, { status: 201 });
 }
+
+export async function DELETE(request: NextRequest) {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("session");
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const id = request.nextUrl.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  await repository.deletePost(id);
+  return NextResponse.json({ success: true });
+}
