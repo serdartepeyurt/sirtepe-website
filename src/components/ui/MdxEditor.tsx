@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import styles from "./MdxEditor.module.css";
 import ReactMarkdown from "react-markdown";
@@ -16,6 +16,11 @@ export default function MdxEditor({ initialValue = "", onChange }: MdxEditorProp
   const [value, setValue] = useState(initialValue);
   const [activeTab, setActiveTab] = useState<"write" | "preview">("write");
 
+  // Force dark mode on the editor library's CSS
+  useEffect(() => {
+    document.body.setAttribute("data-color-mode", "dark");
+  }, []);
+
   const handleChange = useCallback((val: string | undefined) => {
     const newValue = val || "";
     setValue(newValue);
@@ -23,7 +28,7 @@ export default function MdxEditor({ initialValue = "", onChange }: MdxEditorProp
   }, [onChange]);
 
   return (
-    <div className={styles.container} data-color-mode="dark">
+    <div className={styles.container}>
       <div className={styles.tabs}>
         <button
           type="button"

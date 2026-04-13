@@ -65,7 +65,8 @@
 .editor :global(.w-md-editor-text-input) {
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
-  caret-color: var(--text-primary) !important;
+  caret-color: var(--accent) !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
 }
 
 .editor :global(.w-md-editor-text) {
