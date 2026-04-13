@@ -4,7 +4,9 @@ export interface BlogPost {
   title: string;
   content: string;
   excerpt: string | null;
+  tags: string[];
   published: boolean;
+  viewCount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -15,4 +17,5 @@ export interface IContentRepository {
   createPost(post: Omit<BlogPost, 'id' | 'createdAt' | 'updatedAt'>): Promise<BlogPost>;
   updatePost(id: string, post: Partial<BlogPost>): Promise<BlogPost>;
   deletePost(id: string): Promise<void>;
+  incrementViewCount(slug: string): Promise<void>;
 }

@@ -8,7 +8,7 @@ import styles from "@/app/admin/admin.module.css";
 
 export default function NewPost() {
   const router = useRouter();
-  const [form, setForm] = useState({ title: "", slug: "", excerpt: "" });
+  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", tags: "" });
   const [content, setContent] = useState("");
   const [published, setPublished] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -18,8 +18,14 @@ export default function NewPost() {
       title: value,
       slug: value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
       excerpt: form.excerpt,
+      tags: form.tags,
     });
   };
+
+  const parsedTags = form.tags
+    .split(",")
+    .map((t) => t.trim().toLowerCase().replace(/\s+/g, "-"))
+    .filter(Boolean);
 
   const handleSave = async () => {
     if (!form.title || !form.slug || !content) return;
@@ -28,7 +34,7 @@ export default function NewPost() {
       const res = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, content, published }),
+        body: JSON.stringify({ ...form, tags: parsedTags, content, published }),
       });
       if (res.ok) router.push("/admin");
     } finally {
@@ -101,6 +107,23 @@ export default function NewPost() {
               readOnly
             />
           </div>
+        </div>
+        <div className={styles.formField}>
+          <label className={styles.formLabel}>Tags <span style={{ opacity: 0.5, fontWeight: 400 }}>(comma-separated)</span></label>
+          <input
+            className={styles.formInput}
+            type="text"
+            placeholder="e.g. rust, web, devops"
+            value={form.tags}
+            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+          />
+          {parsedTags.length > 0 && (
+            <div className={styles.tagPreview}>
+              {parsedTags.map((t) => (
+                <span key={t} className={styles.tagChip}>{t}</span>
+              ))}
+            </div>
+          )}
         </div>
         <div className={styles.formField}>
           <label className={styles.formLabel}>Excerpt</label>

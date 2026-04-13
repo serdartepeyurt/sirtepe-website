@@ -65,6 +65,17 @@
 .editor :global(.w-md-editor-text-input) {
   background: var(--bg-secondary) !important;
   color: var(--text-primary) !important;
+  caret-color: var(--text-primary) !important;
+}
+
+.editor :global(.w-md-editor-text) {
+  color: var(--text-primary) !important;
+}
+
+.editor :global(.w-md-editor-area textarea) {
+  color: var(--text-primary) !important;
+  background: var(--bg-secondary) !important;
+  caret-color: var(--accent) !important;
 }
 
 .editor :global(.w-md-editor-preview) {

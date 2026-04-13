@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { PrismaContentRepository } from "@/lib/content/PrismaContentRepository";
 import { GiscusCommentProvider } from "@/components/comments/GiscusCommentProvider";
 import { giscusConfig } from "@/lib/comments/GiscusConfig";
@@ -19,6 +20,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${post.title} — Serdar Tepeyurt`,
     description: post.excerpt || undefined,
+    keywords: post.tags.length > 0 ? post.tags : undefined,
   };
 }
 
@@ -29,6 +31,9 @@ export default async function BlogPost({ params }: PageProps) {
   if (!post || !post.published) {
     notFound();
   }
+
+  // Increment view count (fire and forget)
+  repository.incrementViewCount(slug).catch(() => {});
 
   return (
     <main className={styles.main}>
@@ -44,6 +49,15 @@ export default async function BlogPost({ params }: PageProps) {
           <h1 className={styles.title}>{post.title}</h1>
           {post.excerpt && <p className={styles.excerpt}>{post.excerpt}</p>}
         </header>
+        {post.tags.length > 0 && (
+          <div className={styles.tagList}>
+            {post.tags.map((t: string) => (
+              <Link key={t} href={`/blog?tag=${encodeURIComponent(t)}`} className={styles.tagChip}>
+                {t}
+              </Link>
+            ))}
+          </div>
+        )}
         <div className={styles.content}>
           <ReactMarkdown>{post.content}</ReactMarkdown>
         </div>

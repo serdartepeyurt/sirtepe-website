@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import styles from "@/app/admin/admin.module.css";
 import type { BlogPost } from "@/interfaces/IContentRepository";
 
 type Filter = "all" | "published" | "draft";
-type SortField = "createdAt" | "title" | "published";
 
 export default function AdminDashboard() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
-  const [sortField, setSortField] = useState<SortField>("createdAt");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const [toggling, setToggling] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
@@ -29,6 +27,12 @@ export default function AdminDashboard() {
   }, []);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    posts.forEach((p) => p.tags.forEach((t) => tagSet.add(t)));
+    return Array.from(tagSet).sort();
+  }, [posts]);
 
   const togglePublish = async (post: BlogPost) => {
     setToggling(post.id);
@@ -53,59 +57,72 @@ export default function AdminDashboard() {
     if (res.ok) setPosts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortField(field); setSortDir("asc"); }
-  };
-
   const filtered = posts
     .filter((p) => {
       if (filter === "published" && !p.published) return false;
       if (filter === "draft" && p.published) return false;
+      if (activeTag && !p.tags.includes(activeTag)) return false;
       if (search) {
         const q = search.toLowerCase();
         return p.title.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q);
       }
       return true;
     })
-    .sort((a, b) => {
-      let va: string | boolean = a[sortField] as string | boolean;
-      let vb: string | boolean = b[sortField] as string | boolean;
-      if (typeof va === "boolean") {
-        va = va ? "1" : "0";
-        vb = (vb as boolean) ? "1" : "0";
-      }
-      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
-      return sortDir === "asc" ? cmp : -cmp;
-    });
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const publishedCount = posts.filter((p) => p.published).length;
   const draftCount = posts.filter((p) => !p.published).length;
+  const totalViews = posts.reduce((sum, p) => sum + p.viewCount, 0);
+  const topPost = posts.reduce<BlogPost | null>((top, p) =>
+    (!top || p.viewCount > top.viewCount) ? p : top, null);
 
   return (
     <>
       <div className={styles.pageHeader}>
         <div>
-          <h1 className={styles.pageTitle}>All Posts</h1>
-          <p className={styles.pageSubtitle}>{posts.length} total — {publishedCount} published, {draftCount} draft</p>
+          <h1 className={styles.pageTitle}>Dashboard</h1>
+          <p className={styles.pageSubtitle}>Overview of your content</p>
         </div>
         <Link href="/admin/new" className={styles.saveBtn}>+ New Post</Link>
       </div>
 
-      <div className={styles.stats}>
+      <div className={styles.statsGrid}>
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Total</div>
+          <div className={styles.statLabel}>Total Posts</div>
           <div className={styles.statValue}>{posts.length}</div>
+          <div className={styles.statSub}>{publishedCount} published, {draftCount} draft</div>
         </div>
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Published</div>
-          <div className={styles.statValue}>{publishedCount}</div>
+          <div className={styles.statLabel}>Total Views</div>
+          <div className={styles.statValue}>{totalViews.toLocaleString()}</div>
+          <div className={styles.statSub}>across {publishedCount} published posts</div>
         </div>
         <div className={styles.statCard}>
-          <div className={styles.statLabel}>Drafts</div>
-          <div className={styles.statValue}>{draftCount}</div>
+          <div className={styles.statLabel}>Top Post</div>
+          <div className={styles.statValueSmall}>{topPost?.title ?? "—"}</div>
+          <div className={styles.statSub}>{topPost ? `${topPost.viewCount.toLocaleString()} views` : "no posts yet"}</div>
         </div>
       </div>
+
+      {allTags.length > 0 && (
+        <div className={styles.tagFilterBar}>
+          <button
+            className={`${styles.tagFilterChip} ${activeTag === null ? styles.active : ""}`}
+            onClick={() => setActiveTag(null)}
+          >
+            All
+          </button>
+          {allTags.map((tag) => (
+            <button
+              key={tag}
+              className={`${styles.tagFilterChip} ${activeTag === tag ? styles.active : ""}`}
+              onClick={() => setActiveTag((t) => (t === tag ? null : tag))}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className={styles.tableToolbar}>
         <div className={styles.searchWrapper}>
@@ -140,13 +157,11 @@ export default function AdminDashboard() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th className={styles.colTitle} onClick={() => handleSort("title")} style={{ cursor: "pointer" }}>
-                  Title {sortField === "title" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </th>
+                <th className={styles.colTitle}>Title</th>
                 <th className={styles.colStatus}>Status</th>
-                <th className={styles.colDate} onClick={() => handleSort("createdAt")} style={{ cursor: "pointer" }}>
-                  Date {sortField === "createdAt" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </th>
+                <th className={styles.colTags}>Tags</th>
+                <th className={styles.colViews}>Views</th>
+                <th className={styles.colDate}>Date</th>
                 <th className={styles.colActions}>Actions</th>
               </tr>
             </thead>
@@ -163,6 +178,25 @@ export default function AdminDashboard() {
                       {post.published ? "Published" : "Draft"}
                     </span>
                   </td>
+                  <td className={styles.colTags}>
+                    <div className={styles.tagCell}>
+                      {post.tags.map((tag) => (
+                        <button
+                          key={tag}
+                          className={styles.tagFilterChip}
+                          onClick={() => setActiveTag((t) => (t === tag ? null : tag))}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </td>
+                  <td className={styles.colViews}>
+                    <span className={styles.viewCount}>
+                      {post.viewCount > 0 ? post.viewCount.toLocaleString() : "—"}
+                    </span>
+                  </td>
                   <td className={styles.colDate}>
                     {new Date(post.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                   </td>
@@ -172,14 +206,14 @@ export default function AdminDashboard() {
                         className={`${styles.toggleBtn} ${post.published ? styles.toggleDraft : styles.togglePublish}`}
                         onClick={() => togglePublish(post)}
                         disabled={toggling === post.id}
-                        title={post.published ? "Unpublish (save as draft)" : "Publish"}
+                        title={post.published ? "Move to draft" : "Publish"}
                       >
                         {post.published ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H10" />
                           </svg>
                         ) : (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 12l5 5L20 7" />
                           </svg>
                         )}

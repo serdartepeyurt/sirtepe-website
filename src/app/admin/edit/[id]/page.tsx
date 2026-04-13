@@ -1,33 +1,36 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MdxEditor from "@/components/ui/MdxEditor";
 import styles from "@/app/admin/admin.module.css";
 import type { BlogPost } from "@/interfaces/IContentRepository";
 
-export default function EditPost({ params }: { params: { id: string } }) {
+export default function EditPost({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", content: "" });
+  const [form, setForm] = useState({ title: "", slug: "", excerpt: "", tags: "" });
+  const [content, setContent] = useState("");
   const [published, setPublished] = useState(false);
 
-  const loadPost = useCallback(async () => {
+  const loadPost = useCallback(async (postId: string) => {
     const res = await fetch("/api/posts");
     if (!res.ok) { router.push("/admin"); return; }
     const posts: BlogPost[] = await res.json();
-    const found = posts.find((p) => p.id === params.id);
+    const found = posts.find((p) => p.id === postId);
     if (!found) { router.push("/admin"); return; }
     setPost(found);
-    setForm({ title: found.title, slug: found.slug, excerpt: found.excerpt || "", content: found.content });
+    setForm({ title: found.title, slug: found.slug, excerpt: found.excerpt || "", tags: found.tags.join(", ") });
+    setContent(found.content);
     setPublished(found.published);
     setLoading(false);
-  }, [params.id, router]);
+  }, [router]);
 
-  useEffect(() => { loadPost(); }, [loadPost]);
+  useEffect(() => { loadPost(id); }, [id, loadPost]);
 
   const handleTitleChange = (value: string) => {
     setForm((f) => ({
@@ -37,14 +40,19 @@ export default function EditPost({ params }: { params: { id: string } }) {
     }));
   };
 
+  const parsedTags = form.tags
+    .split(",")
+    .map((t) => t.trim().toLowerCase().replace(/\s+/g, "-"))
+    .filter(Boolean);
+
   const handleSave = async () => {
-    if (!form.title || !form.slug || !form.content || !post) return;
+    if (!form.title || !form.slug || !content || !post) return;
     setSaving(true);
     try {
       const res = await fetch("/api/posts", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: post.id, ...form, published }),
+        body: JSON.stringify({ id: post.id, ...form, tags: parsedTags, content, published }),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -97,7 +105,7 @@ export default function EditPost({ params }: { params: { id: string } }) {
               </>
             )}
           </button>
-          <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={saving || !form.title || !form.content}>
+          <button type="button" className={styles.saveBtn} onClick={handleSave} disabled={saving || !form.title || !content}>
             {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
@@ -115,13 +123,30 @@ export default function EditPost({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className={styles.formField}>
+          <label className={styles.formLabel}>Tags <span style={{ opacity: 0.5, fontWeight: 400 }}>(comma-separated)</span></label>
+          <input
+            className={styles.formInput}
+            type="text"
+            placeholder="e.g. rust, web, devops"
+            value={form.tags}
+            onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
+          />
+          {parsedTags.length > 0 && (
+            <div className={styles.tagPreview}>
+              {parsedTags.map((t) => (
+                <span key={t} className={styles.tagChip}>{t}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className={styles.formField}>
           <label className={styles.formLabel}>Excerpt</label>
           <textarea className={styles.formTextarea} value={form.excerpt} onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))} placeholder="Short description shown in post listings..." />
         </div>
         <div className={styles.editorField}>
           <label className={styles.formLabel}>Content (MDX)</label>
           <div className={styles.editor}>
-            <MdxEditor onChange={(v) => setForm((f) => ({ ...f, content: v || "" }))} />
+            <MdxEditor onChange={(v) => setContent(v || "")} initialValue={content} />
           </div>
         </div>
       </div>
