@@ -6,9 +6,13 @@
   z-index: 100;
   padding: 0.875rem 2rem;
   background: rgba(143, 177, 229, 0.19);
-  backdrop-filter: blur(10px) saturate(180%) /* */;
-  -webkit-backdrop-filter: blur(10px) saturate(180%) /* */;
   border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+}
+
+@supports (backdrop-filter: blur(10px)) {
+  .header {
+    backdrop-filter: blur(10px) saturate(180%);
+  }
 }
 
 .nav {

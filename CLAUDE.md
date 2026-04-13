@@ -32,8 +32,9 @@ src/
 │   │   ├── page.tsx          # Post listing
 │   │   └── [slug]/page.tsx   # Individual post
 │   ├── admin/
-│   │   ├── page.tsx          # Dashboard
-│   │   └── new/page.tsx      # MDX editor (write/preview tabs)
+│   │   ├── page.tsx          # CMS dashboard with stats, searchable table, tag filter
+│   │   ├── edit/[id]/page.tsx # Edit post form with MDX editor
+│   │   └── new/page.tsx       # New post form with MDX editor
 │   └── api/
 │       ├── auth/login/route.ts
 │       ├── auth/callback/route.ts
@@ -107,3 +108,26 @@ MDX editor with tabbed write/preview. Admin panel gated by Google OAuth session 
 ## Workflow
 
 User is product owner. Consult every architectural decision before implementation. Do not proceed without alignment.
+
+## CSS Gotchas
+
+### LightningCSS strips `backdrop-filter`
+Next.js 16 uses LightningCSS which removes the unprefixed `backdrop-filter` property. Always wrap in `@supports` to survive compilation:
+
+```css
+@supports (backdrop-filter: blur(10px)) {
+  .someClass {
+    backdrop-filter: blur(10px) saturate(180%);
+  }
+}
+```
+LightningCSS auto-transforms the `@supports` condition to include `-webkit-backdrop-filter` fallback.
+
+### CSS Module import paths
+Admin pages (`edit/[id]/page.tsx`, `new/page.tsx`) import styles from `@/app/admin/admin.module.css` — the `@/` alias is required.
+
+### Scrollbar styling
+Custom scrollbar styles live in `src/app/globals.css` using `--border` CSS variable. OS defaults look wrong against the dark theme.
+
+### MDX Editor text visibility
+`@uiw/react-md-editor` v4 sets `-webkit-text-fill-color: transparent` on textarea — override with `color` and `-webkit-text-fill-color` in `MdxEditor.module.css`.
